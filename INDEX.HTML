@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREGUNTAS DE CONOCIMIENTO ESPECÍFICO - PRIMER GRADO</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--primary); }
+        .scoreboard { position: fixed; top: 0; width: 100%; background: var(--primary); color: white; padding: 15px 0; display: flex; justify-content: center; gap: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; font-weight: bold; font-size: 1.1em; }
+        .correct-count { color: #2ecc71; }
+        .incorrect-count { color: #ff7675; }
+        .container { max-width: 850px; margin: 90px auto 40px; background: white; padding: 35px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); font-size: 1.6em; border-bottom: 4px solid var(--accent); padding-bottom: 15px; text-transform: uppercase; margin-bottom: 40px; }
+        .question-card { margin-bottom: 45px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .question-header { font-weight: 700; font-size: 1.15em; color: #34495e; margin-bottom: 18px; display: block; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { background: #fff; border: 2px solid #dfe6e9; padding: 14px 20px; border-radius: 10px; cursor: pointer; text-align: left; font-size: 1em; transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { border-color: var(--accent); background: #f1f9ff; }
+        .correct { background: var(--success) !important; color: white; border-color: #219150 !important; }
+        .incorrect { background: var(--error) !important; color: white; border-color: #c0392b !important; }
+        .feedback { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; font-size: 0.95em; border-left: 6px solid; }
+        .fb-success { background: #d4edda; color: #155724; border-color: #28a745; }
+        .fb-error { background: #f8d7da; color: #721c24; border-color: #dc3545; }
+        .ref-box { margin-top: 10px; font-size: 0.85em; color: #7f8c8d; font-style: italic; display: none; padding: 8px; background: #f9f9f9; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="scoreboard">
+    <div class="score-item">Aciertos: <span id="correct-total" class="correct-count">0</span></div>
+    <div class="score-item">Errores: <span id="incorrect-total" class="incorrect-count">0</span></div>
+</div>
+
+<div class="container">
+    <h1>PREGUNTAS DE CONOCIMIENTO ESPECÍFICO - PRIMER GRADO</h1>
+    <div id="quiz-content"></div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "¿Qué define técnicamente el proceso de acomodación?",
+            opts: ["A) Incorporar nueva información en esquemas ya existentes.", "B) Modificar esquemas previos ante nuevas experiencias externas.", "C) Repetir conductas motoras sin una intención simbólica.", "D) Organizar estímulos sensoriales en una estructura perceptiva."],
+            ans: 1, 
+            fbs: ["Incorrecto. Esta es la definición de asimilación[cite: 1484].", "¡Correcto! La acomodación implica la transformación de las estructuras mentales[cite: 1485].", "Incorrecto. Describe una reacción circular primaria[cite: 1486].", "Incorrecto. Se refiere a la percepción gestáltica básica[cite: 1487]."],
+            sug: "Libro: Desarrollo humano: una perspectiva del ciclo vital de Kail y Cavanaugh[cite: 1488]."
+        },
+        {
+            q: "Según Gardner, la inteligencia de tipo interpersonal permite:",
+            opts: ["A) Conocimiento profundo de los propios sentimientos internos.", "B) Dominio técnico de lenguajes de programación abstractos.", "C) Capacidad para comprender las intenciones de otros.", "D) Orientación precisa en espacios geográficos muy abiertos."],
+            ans: 2,
+            fbs: ["Incorrecto. Corresponde específicamente a la inteligencia intrapersonal[cite: 1494].", "Incorrecto. Se asocia más con la inteligencia lógico-matemática[cite: 1495].", "¡Correcto! Es la facultad de empatizar y trabajar cooperativamente[cite: 1496].", "Incorrecto. Esta es la definición de inteligencia espacial[cite: 1497]."],
+            sug: "Libro: Introducción a la psicología: una visión científico-humanística de Zepeda Herrera[cite: 1498]."
+        },
+        {
+            q: "¿Qué caracteriza a la zona de desarrollo próximo?",
+            opts: ["A) Nivel de resolución de problemas sin ayuda.", "B) Maduración biológica que ocurre de forma espontánea.", "C) Distancia entre potencial actual y aprendizaje mediado.", "D) Repetición mecánica de contenidos académicos muy rígidos."],
+            ans: 2,
+            fbs: ["Incorrecto. Este es el nivel de desarrollo real[cite: 1504].", "Incorrecto. Describe el enfoque maduracionista[cite: 1505].", "¡Correcto! Representa el espacio donde el aprendizaje es posible con apoyo[cite: 1506].", "Incorrecto. El aprendizaje memorístico no genera evolución cognitiva[cite: 1507]."],
+            sug: "Libro: Didáctica de la educación infantil de M. Zabala[cite: 1508]."
+        },
+        {
+            q: "Un problema de aprendizaje de tipo fonológico implica:",
+            opts: ["A) Dificultad específica para procesar sonidos del lenguaje.", "B) Falta total de visión en entornos oscuros.", "C) Retraso motor en la marcha de infantes.", "D) Incapacidad para realizar cálculos de aritmética simple."],
+            ans: 0,
+            fbs: ["¡Correcto! Afecta la conciencia fonémica para la lectoescritura[cite: 1514].", "Incorrecto. Es un déficit sensorial orgánico[cite: 1515].", "Incorrecto. Describe un hito motor grueso[cite: 1516].", "Incorrecto. Esta dificultad se define técnicamente como discalculia[cite: 1517]."],
+            sug: "Libro: Dificultades del aprendizaje de V. Fonseca[cite: 1518]."
+        },
+        {
+            q: "El pensamiento egocéntrico preoperacional se define por la:",
+            opts: ["A) Capacidad de entender el punto de vista.", "B) Incapacidad para distinguir perspectivas ajenas de propia.", "C) Organización lógica de series por tamaño creciente.", "D) Representación mental de símbolos en ausencia objeto."],
+            ans: 1,
+            fbs: ["Incorrecto. Esta habilidad se desarrolla al superar el egocentrismo[cite: 1524].", "¡Correcto! El niño asume que los demás perciben igual[cite: 1525].", "Incorrecto. Esta es la seriación de operaciones concretas[cite: 1526].", "Incorrecto. Describe la función simbólica general[cite: 1527]."],
+            sug: "Sitio Web: Enciclopedia sobre el Desarrollo de la Primera Infancia[cite: 1528]."
+        },
+        {
+            q: "¿Qué indica la maduración para el control esfinteriano?",
+            opts: ["A) Capacidad de alternar pies al subir escaleras.", "B) Identificación de colores primarios en objetos varios.", "C) Seguimiento de instrucciones verbales de tres pasos.", "D) Consolidación de la marcha autónoma sin apoyos."],
+            ans: 0,
+            fbs: ["¡Correcto! La coordinación señala madurez neurológica de médula [cite: 1535].", "Incorrecto [cite: 1536].", "Incorrecto [cite: 1536].", "Incorrecto[cite: 1536]."],
+            sug: "Libro: Puericultura del niño en edad preescolar de Bastidas[cite: 1537]."
+        },
+        {
+            q: "El 'arte de la crianza' en puericultura busca:",
+            opts: ["A) Supervisión estrictamente médica de signos vitales básicos.", "B) Instrucción técnica sobre contabilidad para familias jóvenes.", "C) Orientación mediante vínculos afectivos y modelos sociales.", "D) Aplicación de castigos corporales ante errores conductuales."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1543].", "Incorrecto[cite: 1543].", "¡Correcto! La crianza humanizada se basa en amor [cite: 1544].", "Incorrecto[cite: 1543]."],
+            sug: "Libro: Puericultura: el arte de la crianza de Gómez[cite: 1545]."
+        },
+        {
+            q: "Un hábito de higiene bucal adecuado requiere:",
+            opts: ["A) Cepillado dental con supervisión después de comer.", "B) Consumo de jugos industriales con mucha azúcar.", "C) Limpieza de encías usando paños muy rugosos.", "D) Visita al dentista únicamente ante dolores fuertes."],
+            ans: 0,
+            fbs: ["¡Correcto! La prevención inicia con hábito diario guiado [cite: 1551].", "Incorrecto [cite: 1552].", "Incorrecto [cite: 1553].", "Incorrecto[cite: 1554]."],
+            sug: "Libro: Manual de Puericultura de Fernández Toral[cite: 1555]."
+        },
+        {
+            q: "La meta de autonomía en la infancia busca:",
+            opts: ["A) Dependencia absoluta de los padres para alimentarse.", "B) Realización de actividades cotidianas por sí mismo.", "C) Memorización de todas las reglas del hogar.", "D) Ejecución de tareas domésticas pesadas sin ayuda."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1561].", "¡Correcto! Fomenta seguridad y resolución de problemas simples [cite: 1562].", "Incorrecto [cite: 1563].", "Incorrecto[cite: 1564]."],
+            sug: "Libro: Desarrollo afectivo y social de F. López[cite: 1565]."
+        },
+        {
+            q: "¿Qué factor interviene en la educación según puericultura?",
+            opts: ["A) Un ambiente de seguridad afectiva y estabilidad.", "B) La ausencia total de límites en casa.", "C) El registro contable de las notas escolares.", "D) La competencia agresiva entre los diversos compañeros."],
+            ans: 0,
+            fbs: ["¡Correcto! Bienestar emocional es el cimiento del aprendizaje [cite: 1571].", "Incorrecto [cite: 1572].", "Incorrecto [cite: 1572].", "Incorrecto[cite: 1572]."],
+            sug: "Artículo: Factores que intervienen en la educación inicial[cite: 1573]."
+        },
+        {
+            q: "La literatura lírica infantil se distingue por:",
+            opts: ["A) Relato de aventuras heroicas en tiempos pasados.", "B) Uso de rima y musicalidad del lenguaje.", "C) Representación de conflictos sociales mediante el diálogo.", "D) Explicación científica de los procesos de fotosíntesis."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1580].", "¡Correcto! La lírica prioriza la estética y emoción [cite: 1581].", "Incorrecto [cite: 1580].", "Incorrecto[cite: 1580]."],
+            sug: "Libro: Teoría de la literatura infantil de Cervera[cite: 1582]."
+        },
+        {
+            q: "El desarrollo de la fantasía permite al niño:",
+            opts: ["A) Copiar fielmente la realidad sin ninguna modificación.", "B) Trascender los límites de la realidad inmediata.", "C) Obedecer reglas lógicas de matemáticas muy avanzadas.", "D) Mantener silencio absoluto durante toda la jornada."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1588].", "¡Correcto! Potencia creatividad y resolución de problemas [cite: 1589].", "Incorrecto [cite: 1588].", "Incorrecto[cite: 1588]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 1590]."
+        },
+        {
+            q: "Un recurso del género didáctico infantil es:",
+            opts: ["A) La fábula con moraleja sobre conductas humanas.", "B) El poema lírico sin una rima definida.", "C) La tragedia dramática sobre la muerte humana.", "D) El manual de usuario para juguetes electrónicos."],
+            ans: 0,
+            fbs: ["¡Correcto! Intención primaria es instruir valor ético [cite: 1596].", "Incorrecto [cite: 1597].", "Incorrecto [cite: 1597].", "Incorrecto[cite: 1597]."],
+            sug: "Libro: Literatura Infantil de M. Dobles Rodríguez[cite: 1598]."
+        },
+        {
+            q: "El teatro de sombras pertenece al género:",
+            opts: ["A) Lírico por su ritmo y rima interna.", "B) Didáctico porque enseña a usar las linternas.", "C) Dramático por la representación mediante la acción.", "D) Narrativo por el recuento de hechos reales."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1604].", "Incorrecto[cite: 1604].", "¡Correcto! Representación que utiliza cuerpo y luz [cite: 1605].", "Incorrecto[cite: 1604]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 1606]."
+        },
+        {
+            q: "La adivinanza potencia en el infante el:",
+            opts: ["A) Desarrollo de la fuerza muscular en brazos.", "B) Pensamiento lógico y la asociación de ideas.", "C) Seguimiento de horarios de sueño nocturno.", "D) Conocimiento técnico sobre reparación de motores diesel."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1612].", "¡Correcto! Requiere deducir conceptos mediante pistas descriptivas [cite: 1613].", "Incorrecto [cite: 1612].", "Incorrecto[cite: 1612]."],
+            sug: "Recopilación: Adivinanzas infantiles de la Fundación Ruipérez[cite: 1614]."
+        },
+        {
+            q: "La ley cefalocaudal del desarrollo establece que:",
+            opts: ["A) Control motor inicia desde cabeza hacia pies.", "B) El movimiento empieza desde dedos hacia tronco.", "C) Los centros nerviosos maduran de forma aleatoria.", "D) La coordinación óculo-manual ocurre antes que gateo."],
+            ans: 0,
+            fbs: ["¡Correcto! Niño domina cuello antes que piernas [cite: 1621].", "Incorrecto [cite: 1622].", "Incorrecto [cite: 1623].", "Incorrecto[cite: 1624]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 1625]."
+        },
+        {
+            q: "El esquema corporal se define como la:",
+            opts: ["A) Imagen mental que poseemos de nuestro cuerpo.", "B) Capacidad de realizar saltos muy altos siempre.", "C) Fuerza física para cargar objetos muy pesados.", "D) Habilidad para correr velozmente en línea recta."],
+            ans: 0,
+            fbs: ["¡Correcto! Construcción progresiva de límites y partes [cite: 1631].", "Incorrecto [cite: 1632].", "Incorrecto [cite: 1632].", "Incorrecto[cite: 1632]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 1633]."
+        },
+        {
+            q: "La estructuración espacio-temporal permite al niño:",
+            opts: ["A) Resolver sumas de tres cifras muy rápidamente.", "B) Situarse respecto a objetos y eventos externos.", "C) Memorizar capitales de todos los países europeos.", "D) Pintar murales usando únicamente técnicas de óleo."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1639].", "¡Correcto! Base para entender conceptos arriba y abajo [cite: 1640].", "Incorrecto [cite: 1639].", "Incorrecto[cite: 1639]."],
+            sug: "Libro: La psicomotricidad en preescolar de Comellas Carbo[cite: 1641]."
+        },
+        {
+            q: "¿Qué define técnicamente la motricidad fina?",
+            opts: ["A) Coordinación de grupos musculares pequeños y precisos.", "B) Realización de saltos con pies juntos coordinadamente.", "C) Trepar por cuerdas en el patio escolar.", "D) Lanzamiento de pelotas pesadas a gran distancia."],
+            ans: 0,
+            fbs: ["¡Correcto! Incluye destrezas como rasgado y enhebrado [cite: 1647].", "Incorrecto [cite: 1648].", "Incorrecto [cite: 1648].", "Incorrecto[cite: 1648]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 1649]."
+        },
+        {
+            q: "La lateralidad en la infancia consiste en:",
+            opts: ["A) Mover ambos brazos al mismo tiempo siempre.", "B) Preferencia funcional por un lado del cuerpo.", "C) Caminar hacia atrás con los ojos cerrados.", "D) Sentarse correctamente en la silla de clase."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1655].", "¡Correcto! Predominio de uso de mano o pie [cite: 1656].", "Incorrecto [cite: 1657].", "Incorrecto[cite: 1657]."],
+            sug: "Artículo: La lateralidad en el desarrollo de PsicoActiva[cite: 1658]."
+        },
+        {
+            q: "¿Qué define la inteligencia lógico-matemática infantil?",
+            opts: ["A) Capacidad para percibir imágenes visuales tridimensionales.", "B) Sensibilidad hacia sonidos y ritmos musicales.", "C) Facultad para manejar largas cadenas razonamiento.", "D) Habilidad para utilizar el cuerpo expresivamente."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1664].", "Incorrecto[cite: 1664].", "¡Correcto! Sensibilidad a esquemas lógicos y abstracciones [cite: 1665].", "Incorrecto[cite: 1664]."],
+            sug: "Libro: Estructuras de la mente de Howard Gardner[cite: 1666]."
+        },
+        {
+            q: "La meta de creatividad en puericultura busca:",
+            opts: ["A) Producción de respuestas originales y divergentes.", "B) Copia fiel de figuras geométricas planas.", "C) Seguimiento estricto de modelos artísticos docentes.", "D) Memorización de datos históricos del entorno."],
+            ans: 0,
+            fbs: ["¡Correcto! Trasciende reproducción mecánica para generar soluciones [cite: 1672].", "Incorrecto [cite: 1673].", "Incorrecto [cite: 1673].", "Incorrecto[cite: 1673]."],
+            sug: "Libro: La enseñanza de la creatividad de Burgos[cite: 1674]."
+        },
+        {
+            q: "El género narrativo en literatura comprende el:",
+            opts: ["A) Expresión de sentimientos mediante ritmo lírico.", "B) Relato de hechos reales o ficticios.", "C) Representación escénica mediante conflictos entre personajes.", "D) Transmisión lúdica de una enseñanza moral."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1680].", "¡Correcto! Cuentos y mitos que estructuran secuencias [cite: 1681].", "Incorrecto [cite: 1680].", "Incorrecto[cite: 1680]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 1682]."
+        },
+        {
+            q: "¿Qué caracteriza al equilibrio dinámico infantil?",
+            opts: ["A) Permanecer quieto sobre superficie muy pequeña.", "B) Mantener postura estable durante el desplazamiento.", "C) Coordinación de movimientos de dedos pequeños.", "D) Reacción rápida ante estímulos sonoros intensos."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1688].", "¡Correcto! Reajuste del tono muscular en movimiento [cite: 1689].", "Incorrecto [cite: 1690].", "Incorrecto[cite: 1690]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 1691]."
+        },
+        {
+            q: "La ley proximodistal de expresión corporal indica:",
+            opts: ["A) Dominio motor desde cabeza hacia pies.", "B) Maduración desde eje central hacia periferia.", "C) Crecimiento óseo dependiente de la nutrición.", "D) Aprendizaje de lectura antes de caminar."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1697].", "¡Correcto! Controla músculos del tronco antes que manos [cite: 1698].", "Incorrecto [cite: 1699].", "Incorrecto[cite: 1699]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 1700]."
+        },
+        {
+            q: "El garabateo desordenado se caracteriza técnicamente por:",
+            opts: ["A) Intención de representar un objeto real.", "B) Trazos impulsivos sin control visual movimiento.", "C) Uso de colores para diferenciar formas.", "D) Copia de letras del alfabeto español."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1706].", "¡Correcto! Descarga motriz sin coordinación ojo y mano [cite: 1707].", "Incorrecto [cite: 1706].", "Incorrecto[cite: 1706]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 1708]."
+        },
+        {
+            q: "Una medida de prevención ante quemaduras es:",
+            opts: ["A) Aplicar cremas dentales sobre herida abierta.", "B) Almacenar líquidos calientes lejos alcance infantil.", "C) Cubrir zona afectada con algodón muy seco.", "D) Realizar masajes fuertes en piel dañada."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1714].", "¡Correcto! Eliminar acceso a calor es estrategia primaria [cite: 1715].", "Incorrecto [cite: 1714].", "Incorrecto[cite: 1714]."],
+            sug: "Libro: La prevención de accidentes infantiles de Caballed[cite: 1716]."
+        },
+        {
+            q: "Un problema de comportamiento disruptivo implica:",
+            opts: ["A) Conductas que impiden normal desarrollo clase.", "B) Dificultad específica para procesar sonidos fonológicos.", "C) Retraso cognitivo en resolución problemas lógicos.", "D) Falta de equilibrio al caminar solos."],
+            ans: 0,
+            fbs: ["¡Correcto! Acciones que alteran convivencia y enseñanza [cite: 1722].", "Incorrecto [cite: 1723].", "Incorrecto [cite: 1723].", "Incorrecto[cite: 1723]."],
+            sug: "Artículo: Manejo de conducta en educación inicial[cite: 1724]."
+        },
+        {
+            q: "La meta de autoestima en puericultura busca:",
+            opts: ["A) Sentimiento de superioridad sobre otros niños.", "B) Valoración positiva de capacidades y cualidades.", "C) Obediencia inmediata ante órdenes de adultos.", "D) Capacidad de correr sin cansarse nunca."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1730].", "¡Correcto! Cimiento emocional para la seguridad personal [cite: 1731].", "Incorrecto [cite: 1730].", "Incorrecto[cite: 1730]."],
+            sug: "Libro: Desarrollo afectivo y social de F. López[cite: 1732]."
+        },
+        {
+            q: "La literatura infantil es importante porque:",
+            opts: ["A) Enseña reglas gramaticales de forma rígida.", "B) Fomenta la importancia y desarrollo emocional.", "C) Facilita la memorización de fechas históricas.", "D) Calma al niño mediante aburrimiento constante."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1738].", "¡Correcto! Niño experimenta emociones y comprende realidades [cite: 1739].", "Incorrecto [cite: 1738].", "Incorrecto[cite: 1738]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 1740]."
+        },
+        {
+            q: "El ritmo en psicomotricidad se define como:",
+            opts: ["A) Fuerza muscular al realizar saltos altos.", "B) Organización temporal de movimientos con cadencia.", "C) Capacidad de estirar extremidades sin dolor.", "D) Velocidad para reaccionar ante estímulos visuales."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1746].", "¡Correcto! Sincronización de acciones con orden temporal [cite: 1747].", "Incorrecto [cite: 1746].", "Incorrecto[cite: 1746]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 1748]."
+        },
+        {
+            q: "La kinesfera en expresión corporal representa el:",
+            opts: ["A) Espacio compartido con todos los compañeros.", "B) Espacio que rodea cuerpo sin desplazarse.", "C) Área total del patio de juegos.", "D) Distancia recorrida durante una carrera rápida."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1754].", "¡Correcto! Límites del movimiento desde punto apoyo [cite: 1755].", "Incorrecto [cite: 1754].", "Incorrecto[cite: 1754]."],
+            sug: "Website: Educación Inicial - Expresión Corporal[cite: 1756]."
+        },
+        {
+            q: "La sensibilización sonora musical busca principalmente:",
+            opts: ["A) Aprender a tocar instrumentos muy caros.", "B) Identificar timbres y ritmos del entorno.", "C) Memorizar biografías de compositores muy famosos.", "D) Leer partituras de música clásica compleja."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1762].", "¡Correcto! Niño descubre y discrimina cualidades sonido [cite: 1763].", "Incorrecto [cite: 1762].", "Incorrecto[cite: 1762]."],
+            sug: "Libro: La expresión artística de Muñoz y Vizcaíno[cite: 1764]."
+        },
+        {
+            q: "Ante una emergencia, el primer paso es:",
+            opts: ["A) Dar de beber agua muy fría.", "B) Evaluar la seguridad del entorno actual.", "C) Mover al niño hacia sitio alejado.", "D) Aplicar pomadas sobre quemaduras de sol."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1770].", "¡Correcto! Principio básico para no generar víctimas [cite: 1771].", "Incorrecto [cite: 1770].", "Incorrecto[cite: 1770]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 1772]."
+        },
+        {
+            q: "El proceso de asimilación según Piaget implica:",
+            opts: ["A) Transformar estructuras mentales ante nuevos datos.", "B) Integrar nueva información en esquemas previos.", "C) Olvidar conocimientos antiguos para aprender nuevos.", "D) Repetir palabras sin entender significado alguno."],
+            ans: 1,
+            fbs: ["Incorrecto. Esta es la acomodación[cite: 1778].", "¡Correcto! Sujeto interpreta realidad desde sus estructuras[cite: 1779].", "Incorrecto.", "Incorrecto."],
+            sug: "Libro: Desarrollo humano de Kail y Cavanaugh[cite: 1780]."
+        },
+        {
+            q: "La meta de salud en puericultura promueve:",
+            opts: ["A) Curación inmediata de enfermedades crónicas graves.", "B) Bienestar físico y mental del niño.", "C) Consumo diario de pastillas vitamínicas variadas.", "D) Permanecer sentado sin realizar actividad física."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1786].", "¡Correcto! Busca equilibrio biopsicosocial para crecimiento óptimo [cite: 1787].", "Incorrecto [cite: 1786].", "Incorrecto[cite: 1786]."],
+            sug: "Guía: Salud infantil de la OPS/OMS[cite: 1788]."
+        },
+        {
+            q: "Los trabalenguas pertenecen al género didáctico porque:",
+            opts: ["A) Cuentan historias de animales del bosque.", "B) Potencian la articulación y dicción clara.", "C) Presentan rimas para bailar en círculo.", "D) Explican el funcionamiento de los motores."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1794].", "¡Correcto! Recurso lúdico para ejercitar rapidez oral [cite: 1795].", "Incorrecto [cite: 1794].", "Incorrecto[cite: 1794]."],
+            sug: "Recopilación: Trabalenguas infantiles en Educación Inicial[cite: 1796]."
+        },
+        {
+            q: "La motricidad gruesa se encarga de:",
+            opts: ["A) Coordinación de dedos para escribir letras.", "B) Control de grandes grupos musculares corporales.", "C) Uso de pinza digital para rasgado.", "D) Dibujo de detalles en caras humanas."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1802].", "¡Correcto! Acciones de locomoción que requieren palancas [cite: 1803].", "Incorrecto [cite: 1802].", "Incorrecto[cite: 1802]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 1804]."
+        },
+        {
+            q: "El gesto y movimiento en expresión busca:",
+            opts: ["A) Comunicación de ideas mediante lenguaje corporal.", "B) Silencio absoluto durante toda la jornada.", "C) Repetición mecánica de ejercicios de gimnasia.", "D) Cálculo de perímetros de formas geométricas."],
+            ans: 0,
+            fbs: ["¡Correcto! Base de expresión dramática del niño [cite: 1810].", "Incorrecto [cite: 1811].", "Incorrecto [cite: 1811].", "Incorrecto[cite: 1811]."],
+            sug: "Libro: La expresión artística de Muñoz y Vizcaíno[cite: 1812]."
+        },
+        {
+            q: "El arte del mimo se diferencia por:",
+            opts: ["A) Uso excesivo de palabras para narrar.", "B) Representación dramática mediante gestos y acción.", "C) Pintura de paisajes con acuarelas brillantes.", "D) Construcción de maquetas con cartón grueso."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1818].", "¡Correcto! Utiliza cuerpo y gesto para comunicar [cite: 1819].", "Incorrecto [cite: 1818].", "Incorrecto[cite: 1818]."],
+            sug: "Website: Artes escénicas infantiles[cite: 1820]."
+        },
+        {
+            q: "¿Qué caracteriza técnicamente al paradigma constructivista?",
+            opts: ["A) Adquisición pasiva de información externa rígida.", "B) Construcción activa del conocimiento por sujeto.", "C) Maduración biológica independiente del entorno social.", "D) Respuesta automática ante estímulos del ambiente."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1827].", "Correcto. Basado en la interacción con objeto [cite: 1826].", "Incorrecto [cite: 1827].", "Incorrecto[cite: 1827]."],
+            sug: "Libro: Introducción a la psicología de Zepeda Herrera[cite: 1828]."
+        },
+        {
+            q: "Según Gardner, la inteligencia de tipo espacial implica:",
+            opts: ["A) Habilidad para reconocer sentimientos de personas.", "B) Destreza para resolver problemas lógicos abstractos.", "C) Facultad para orientar el cuerpo hacia sonidos.", "D) Capacidad para percibir y transformar imágenes visuales."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1835].", "Incorrecto [cite: 1835].", "Incorrecto[cite: 1835].", "Correcto. Permite manejar modelos tridimensionales y orientación[cite: 1834]."],
+            sug: "Libro: Estructuras de la mente de Howard Gardner[cite: 1836]."
+        },
+        {
+            q: "El proceso de acomodación en el desarrollo cognitivo es:",
+            opts: ["A) Incorporar nueva información en esquemas ya existentes.", "B) Repetir conductas motoras sin una intención simbólica.", "C) Reajuste de esquemas previos ante experiencias nuevas.", "D) Organización de estímulos sensoriales en estructuras fijas."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1843].", "Incorrecto[cite: 1843].", "Correcto. El esquema mental cambia para adaptarse [cite: 1842].", "Incorrecto[cite: 1843]."],
+            sug: "Libro: Desarrollo humano de Kail y Cavanaugh[cite: 1844]."
+        },
+        {
+            q: "La meta de autonomía en la infancia busca:",
+            opts: ["A) Dependencia absoluta de los padres para alimentarse.", "B) Seguimiento sumiso de órdenes de adultos externos.", "C) Realización de actividades cotidianas por sí mismo.", "D) Memorización de todas las reglas del hogar."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1852].", "Incorrecto[cite: 1852].", "Correcto. Ganar independencia en hábitos básicos [cite: 1851].", "Incorrecto[cite: 1853]."],
+            sug: "Libro: Puericultura: el arte de la crianza de Gómez[cite: 1854]."
+        },
+        {
+            q: "¿Qué hito neurológico permite el control de esfínteres?",
+            opts: ["A) Identificación de colores primarios en objetos varios.", "B) Maduración de centros nerviosos medulares superiores.", "C) Capacidad de realizar saltos rítmicos muy altos.", "D) Seguimiento de instrucciones verbales de tres pasos."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 1861].", "Correcto. Depende de mielinización de vías nerviosas [cite: 1860].", "Incorrecto [cite: 1861].", "Incorrecto[cite: 1861]."],
+            sug: "Libro: Puericultura en edad preescolar de Bastidas[cite: 1862]."
+        },
+        {
+            q: "¿Cuál es la función del género lírico infantil?",
+            opts: ["A) Análisis métrico de los versos en clase.", "B) Narración de eventos históricos de forma secuencial.", "C) Goce estético mediante el ritmo del lenguaje.", "D) Enseñanza de valores morales mediante la rima."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1870].", "Incorrecto[cite: 1870].", "Correcto. Prioriza musicalidad y emoción sobre contenido [cite: 1869].", "Incorrecto[cite: 1870]."],
+            sug: "Libro: Teoría de la literatura infantil de Cervera[cite: 1871]."
+        },
+        {
+            q: "El mito en la literatura infantil se caracteriza por:",
+            opts: ["A) Relatos que explican orígenes mediante la fantasía.", "B) Consejos prácticos sobre higiene y salud escolar.", "C) Análisis de la gramática de lenguas antiguas.", "D) Instrucciones técnicas para armar juguetes de madera."],
+            ans: 0,
+            fbs: ["Correcto. Proporcionan explicación simbólica y cosmogónica [cite: 1877].", "Incorrecto [cite: 1878].", "Incorrecto [cite: 1878].", "Incorrecto[cite: 1878]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 1879]."
+        },
+        {
+            q: "La motricidad fina en el preescolar implica:",
+            opts: ["A) Coordinación de grupos musculares pequeños muy precisos.", "B) Realización de saltos con pies juntos coordinadamente.", "C) Trepar por cuerdas en el patio escolar.", "D) Lanzamiento de pelotas pesadas a gran distancia."],
+            ans: 0,
+            fbs: ["Correcto. Requiere destreza manual y coordinación óculo-motriz [cite: 1886].", "Incorrecto [cite: 1887].", "Incorrecto [cite: 1887].", "Incorrecto[cite: 1887]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 1888]."
+        },
+        {
+            q: "¿Qué define técnicamente a la coordinación motriz?",
+            opts: ["A) Fuerza física para cargar objetos muy pesados.", "B) Estiramiento máximo de las fibras musculares esqueléticas.", "C) Reacción refleja ante un golpe físico externo.", "D) Ejecución armónica de movimientos voluntarios muy precisos."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1895].", "Incorrecto [cite: 1895].", "Incorrecto[cite: 1895].", "Correcto. Sincronización ordenada de impulsos nerviosos y muscular[cite: 1894]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 1896]."
+        },
+        {
+            q: "La ley cefalocaudal del desarrollo motor indica:",
+            opts: ["A) Control muscular desde el eje hacia periferia.", "B) Maduración biológica dependiente del entorno social cercano.", "C) Progreso madurativo desde la cabeza hacia pies.", "D) Desarrollo del lenguaje después de la marcha."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1904].", "Incorrecto[cite: 1905].", "Correcto. Control voluntario inicia en cabeza y desciende [cite: 1903].", "Incorrecto[cite: 1905]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 1906]."
+        },
+        {
+            q: "El dominio del espacio parcial se define como:",
+            opts: ["A) Traslado físico por toda el área disponible.", "B) Carrera de velocidad en línea recta larga.", "C) Salto coordinado sobre colchonetas de color azul.", "D) Movimiento desde un eje sin desplazamiento alguno."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1913].", "Incorrecto [cite: 1913].", "Incorrecto[cite: 1913].", "Correcto. Kinesfera, espacio alcanzado sin moverse del sitio[cite: 1912]."],
+            sug: "Website: Educación Inicial - Psicomotricidad[cite: 1914]."
+        },
+        {
+            q: "En cultura estética, las técnicas grafo-plásticas son:",
+            opts: ["A) Actividades físicas de expresión corporal muy libres.", "B) Ejercicios de caligrafía para mejorar letra escrita.", "C) Citas de autores famosos sobre arte contemporáneo.", "D) Medios para expresar la creatividad mediante imagen."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1922].", "Incorrecto [cite: 1922].", "Incorrecto[cite: 1922].", "Correcto. Dibujo y pintura como herramientas de representación[cite: 1921]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 1923]."
+        },
+        {
+            q: "Noemí Burgos plantea que la creatividad infantil es:",
+            opts: ["A) Talento innato que no requiere aprendizaje escolar.", "B) Copia fiel de obras de arte clásico.", "C) Obediencia a las pautas estéticas del docente.", "D) Potencialidad que se desarrolla mediante la exploración."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1930].", "Incorrecto [cite: 1930].", "Incorrecto[cite: 1930].", "Correcto. Enseñada y aprendida mediante pensamiento divergente[cite: 1929]."],
+            sug: "Libro: La enseñanza de la creatividad de N. Burgos[cite: 1931]."
+        },
+        {
+            q: "Ante un atragantamiento parcial en clase, el docente:",
+            opts: ["A) Realizar la maniobra de Heimlich de inmediato.", "B) Introducir los dedos en la garganta profunda.", "C) Dar de beber agua fría muy rápido.", "D) Estimular la tos para expulsar el objeto."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1939].", "Incorrecto [cite: 1940].", "Incorrecto[cite: 1940].", "Correcto. Mecanismo natural más efectivo ante obstrucción parcial[cite: 1938]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 1941]."
+        },
+        {
+            q: "La dislexia según Fonseca se asocia técnicamente a:",
+            opts: ["A) Bajo cociente intelectual medido por test formales.", "B) Problemas de visión corregidos con lentes oscuros.", "C) Falta de atención por aburrimiento en clase.", "D) Déficit en el procesamiento del lenguaje escrito."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1949].", "Incorrecto [cite: 1949].", "Incorrecto[cite: 1949].", "Correcto. Dificultad específica del aprendizaje de base neurobiológica[cite: 1948]."],
+            sug: "Libro: Dificultades del aprendizaje de V. Fonseca[cite: 1950]."
+        },
+        {
+            q: "¿Qué factor de apego es vital según López?",
+            opts: ["A) Castigo sistemático para corregir una conducta errónea.", "B) Aislamiento del niño para fomentar la independencia.", "C) Satisfacción de necesidades afectivas mediante vínculo seguro.", "D) Regalo de premios materiales ante buenas acciones."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 1957].", "Incorrecto[cite: 1957].", "Correcto. Seguridad emocional base del desarrollo social sano [cite: 1956].", "Incorrecto[cite: 1957]."],
+            sug: "Libro: Desarrollo afectivo y social de F. López[cite: 1958]."
+        },
+        {
+            q: "El teatro de títeres permite al niño:",
+            opts: ["A) Aprender reglas ortográficas de forma muy amena.", "B) Memorizar nombres de capitales del mundo entero.", "C) Desarrollar fuerza física en las piernas inferiores.", "D) Expulsar sentimientos y conflictos mediante la ficción."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1965].", "Incorrecto [cite: 1965].", "Incorrecto[cite: 1965].", "Correcto. Representación facilita proyección de vida interior[cite: 1964]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 1966]."
+        },
+        {
+            q: "Según Esparza, el esquema corporal infantil es:",
+            opts: ["A) Dibujo de una figura humana muy detallada.", "B) Conocimiento técnico de la anatomía de huesos.", "C) Capacidad de saltar obstáculos muy altos siempre.", "D) Representación mental del cuerpo en el espacio."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1973].", "Incorrecto [cite: 1973].", "Incorrecto[cite: 1973].", "Correcto. Construcción progresiva e intuitiva de identidad física[cite: 1972]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 1974]."
+        },
+        {
+            q: "El juego simbólico se caracteriza técnicamente por la:",
+            opts: ["A) Copia exacta de conductas de los adultos.", "B) Realización de cálculos mentales de alta velocidad.", "C) Obediencia a las leyes de la física.", "D) Representación de realidades ausentes mediante el juego."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1981].", "Incorrecto [cite: 1981].", "Incorrecto[cite: 1981].", "Correcto. Significado que permite evocar un significado inexistente[cite: 1980]."],
+            sug: "Website: Enciclopedia Desarrollo Primera Infancia[cite: 1982]."
+        },
+        {
+            q: "Según Caballed, la prevención de accidentes requiere:",
+            opts: ["A) Intervención quirúrgica inmediata en el patio escolar.", "B) Aplicación de fármacos potentes ante cualquier dolor.", "C) Traslado urgente en ambulancia ante golpes leves.", "D) Identificación y control de riesgos ambientales escolares."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 1989].", "Incorrecto [cite: 1989].", "Incorrecto[cite: 1989].", "Correcto. Seguridad basada en eliminación peligros antes del daño[cite: 1988]."],
+            sug: "Libro: La prevención de accidentes infantiles de Caballed[cite: 1990]."
+        },
+        {
+            q: "¿Qué define un problema de comportamiento escolar?",
+            opts: ["A) Conductas desafiantes que afectan clima del aula.", "B) Dificultad específica para adquirir habilidades académicas básicas.", "C) Retraso cognitivo en resolución de problemas lógicos.", "D) Déficit sensorial que impide la visión periférica."],
+            ans: 0,
+            fbs: ["¡Correcto! Patrones disruptivos que interfieren en enseñanza [cite: 1997].", "Incorrecto [cite: 1996].", "Incorrecto [cite: 1996].", "Incorrecto[cite: 1996]."],
+            sug: "Artículo: Intervención docente ante conductas disruptivas[cite: 1998]."
+        },
+        {
+            q: "La disciplina positiva en puericultura se basa:",
+            opts: ["A) En el uso de refuerzos materiales externos.", "B) En límites claros con respeto y afecto.", "C) En la ausencia total de reglas familiares.", "D) En el castigo punitivo ante errores infantiles."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2004].", "¡Correcto! Orienta desarrollo mediante autocontrol y seguridad [cite: 2005].", "Incorrecto [cite: 2004].", "Incorrecto[cite: 2004]."],
+            sug: "Libro: Disciplina Positiva de Jane Nelsen[cite: 2006]."
+        },
+        {
+            q: "El teatro de títeres facilita técnicamente la:",
+            opts: ["A) Memorización de reglas ortográficas de la lengua.", "B) Proyección de conflictos y emociones del niño.", "C) Resolución de cálculos aritméticos de alta velocidad.", "D) Mejora de la visión en espacios oscuros."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2012].", "¡Correcto! Exteriorización mundo interno mediante personajes ficción [cite: 2013].", "Incorrecto [cite: 2012].", "Incorrecto[cite: 2012]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2014]."
+        },
+        {
+            q: "¿Qué caracteriza al equilibrio dinámico en psicomotricidad?",
+            opts: ["A) Permanecer quieto sobre superficie de apoyo reducida.", "B) Coordinación de movimientos de grupos musculares pequeños.", "C) Mantener postura estable durante el desplazamiento corporal.", "D) Reacción muscular rápida ante estímulos externos súbitos."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2020].", "Incorrecto[cite: 2020].", "¡Correcto! Capacidad reajustar tono muscular en traslado [cite: 2021].", "Incorrecto[cite: 2020]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 2022]."
+        },
+        {
+            q: "El espacio parcial o kinesfera consiste en:",
+            opts: ["A) Trasladarse por toda el área del patio.", "B) Espacio que rodea cuerpo sin desplazamiento alguno.", "C) Área compartida con otros niños en juegos.", "D) Carrera de velocidad siguiendo una trayectoria recta."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2028].", "¡Correcto! Volumen espacial alcanzado desde punto apoyo fijo [cite: 2029].", "Incorrecto [cite: 2028].", "Incorrecto[cite: 2028]."],
+            sug: "Website: Educación Inicial - Psicomotricidad[cite: 2030]."
+        },
+        {
+            q: "La etapa del garabateo controlado se define:",
+            opts: ["A) Por trazos impulsivos sin control visual alguno.", "B) Por representación de figura humana con detalles.", "C) Por descubrimiento de relación entre ojo mano.", "D) Por copia fiel de letras del alfabeto."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2036].", "Incorrecto[cite: 2036].", "¡Correcto! Niño dirige trazos voluntariamente por maduración [cite: 2037].", "Incorrecto[cite: 2036]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 2038]."
+        },
+        {
+            q: "Una medida preventiva ante riesgo de asfixia:",
+            opts: ["A) Guardar productos de limpieza en envases vacíos.", "B) Supervisar el uso de juguetes con piezas.", "C) Aplicar jarabes para la tos sin receta.", "D) Permitir que niños corran mientras comen frutas."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2044].", "¡Correcto! Eliminar objetos pequeños previene obstrucción [cite: 2045].", "Incorrecto [cite: 2044].", "Incorrecto[cite: 2044]."],
+            sug: "Libro: La prevención de accidentes infantiles de Caballed[cite: 2046]."
+        },
+        {
+            q: "Según Gardner, la inteligencia intrapersonal permite la:",
+            opts: ["A) Capacidad para interactuar con otros grupos sociales.", "B) Habilidad para resolver problemas de lógica pura.", "C) Facultad de comprender los propios sentimientos internos.", "D) Destreza para orientarse en espacios geográficos nuevos."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2052].", "Incorrecto[cite: 2052].", "¡Correcto! Conocimiento profundo de sí mismo para regular emoción [cite: 2053].", "Incorrecto[cite: 2052]."],
+            sug: "Libro: Introducción a la psicología de Zepeda Herrera[cite: 2054]."
+        },
+        {
+            q: "Un hábito de sueño saludable requiere técnicamente:",
+            opts: ["A) Realizar actividades físicas intensas antes de descansar.", "B) Consumir bebidas azucaradas justo antes de dormir.", "C) Dormir diez horas diarias en horario regular.", "D) Mantener luces encendidas durante toda la noche."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2060].", "Incorrecto[cite: 2060].", "¡Correcto! Regularidad y duración garantizan maduración SNC [cite: 2061].", "Incorrecto[cite: 2060]."],
+            sug: "Guía: Higiene del sueño infantil[cite: 2062]."
+        },
+        {
+            q: "La adivinanza didáctica potencia en el niño:",
+            opts: ["A) El desarrollo de la fuerza en brazos.", "B) El seguimiento de horarios de alimentación.", "C) El pensamiento lógico y asociación de ideas.", "D) El conocimiento técnico sobre reparación de motores."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2068].", "Incorrecto[cite: 2068].", "¡Correcto! Deducir concepto oculto mediante pistas metafóricas [cite: 2069].", "Incorrecto[cite: 2068]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2070]."
+        },
+        {
+            q: "¿Qué integra la coordinación motriz global infantil?",
+            opts: ["A) Movimiento preciso de dedos para abrochar botones.", "B) Ejecución armoniosa de grandes palancas musculares corporales.", "C) Uso de pinceles finos para pintar detalles.", "D) Enhebrar cuentas pequeñas en hilos de seda."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2076].", "¡Correcto! Fuerza y sincronización cuerpo en traslado [cite: 2077].", "Incorrecto [cite: 2076].", "Incorrecto[cite: 2076]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 2078]."
+        },
+        {
+            q: "La ley cefalocaudal de expresión corporal indica:",
+            opts: ["A) Control motor desde hombros hacia las manos.", "B) Maduración biológica dependiente del entorno social.", "C) Progreso madurativo desde la cabeza hacia pies.", "D) Desarrollo del lenguaje después de la marcha."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2084].", "Incorrecto[cite: 2085].", "¡Correcto! Control voluntario inicia en cabeza y desciende [cite: 2086].", "Incorrecto[cite: 2085]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 2087]."
+        },
+        {
+            q: "Noemí Burgos plantea que la creatividad infantil:",
+            opts: ["A) Es talento innato que no requiere aprendizaje.", "B) Es copia fiel de obras de arte.", "C) Se desarrolla mediante la autonomía y exploración.", "D) Es obediencia a pautas estéticas del docente."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2093].", "Incorrecto[cite: 2093].", "¡Correcto! Florece mediante pensamiento divergente y libertad [cite: 2094].", "Incorrecto[cite: 2093]."],
+            sug: "Libro: La enseñanza de la creatividad de Burgos[cite: 2095]."
+        },
+        {
+            q: "Un procedimiento técnico ante hemorragia externa es:",
+            opts: ["A) Aplicar alcohol puro directamente sobre herida.", "B) Realizar presión directa con una gasa limpia.", "C) Dar masajes fuertes alrededor de zona lesionada.", "D) Administrar fármacos orales para detener sangrado."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2101].", "¡Correcto! Compresión maniobra primera línea para coagulación [cite: 2102].", "Incorrecto [cite: 2101].", "Incorrecto[cite: 2101]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 2103]."
+        },
+        {
+            q: "La dislexia según Fonseca se asocia técnicamente:",
+            opts: ["A) A bajo cociente intelectual medido por test.", "B) A problemas de visión corregidos con lentes.", "C) A déficit en procesamiento del lenguaje escrito.", "D) A falta de atención por aburrimiento académico."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2109].", "Incorrecto[cite: 2109].", "¡Correcto! Dificultad específica base neurobiológica y fonológica [cite: 2110].", "Incorrecto[cite: 2109]."],
+            sug: "Libro: Dificultades del aprendizaje de V. Fonseca[cite: 2111]."
+        },
+        {
+            q: "El factor de apego seguro implica tener:",
+            opts: ["A) Castigo sistemático para corregir una conducta errónea.", "B) Confianza básica en disponibilidad del cuidador primario.", "C) Aislamiento del niño para fomentar la independencia.", "D) Regalo de premios materiales ante buenas acciones."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2117].", "¡Correcto! Seguridad emocional base del desarrollo social sano [cite: 2118].", "Incorrecto [cite: 2117].", "Incorrecto[cite: 2117]."],
+            sug: "Libro: Desarrollo afectivo y social de F. López[cite: 2119]."
+        },
+        {
+            q: "La fantasía en literatura infantil permite al:",
+            opts: ["A) Niño copiar fielmente la realidad sin cambios.", "B) Infante trascender límites de la realidad inmediata.", "C) Estudiante obedecer leyes de física muy avanzadas.", "D) Alumno mantener silencio absoluto durante toda jornada."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2125].", "¡Correcto! Herramienta cognitiva potencia creatividad y resolución [cite: 2126].", "Incorrecto [cite: 2125].", "Incorrecto[cite: 2125]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 2127]."
+        },
+        {
+            q: "El esquema corporal permite al niño reconocer:",
+            opts: ["A) Los nombres de las calles de ciudad.", "B) El precio de los juguetes en tiendas.", "C) Las partes y funciones de su cuerpo.", "D) La órbita de planetas del sistema solar."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2133].", "Incorrecto[cite: 2133].", "¡Correcto! Representación mental y vivencial identidad física [cite: 2134].", "Incorrecto[cite: 2133]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 2135]."
+        },
+        {
+            q: "El juego simbólico facilita técnicamente la adquisición:",
+            opts: ["A) De habilidades para correr cien metros rápido.", "B) De la función de representación mental interna.", "C) De normas de conducta social muy estrictas.", "D) De conocimientos sobre anatomía de huesos humanos."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2141].", "¡Correcto! Evocar situaciones objetos ausentes mediante pensamiento [cite: 2142].", "Incorrecto [cite: 2141].", "Incorrecto[cite: 2141]."],
+            sug: "Libro: Desarrollo humano de Kail y Cavanaugh[cite: 2143]."
+        },
+        {
+            q: "Las artes grafo-plásticas en el preescolar son:",
+            opts: ["A) Escuchar música clásica durante el recreo escolar.", "B) Memorizar fechas de batallas históricas muy importantes.", "C) Realizar saltos rítmicos sobre una cuerda larga.", "D) Medios para expresar creatividad mediante la imagen."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 2149].", "Incorrecto [cite: 2149].", "Incorrecto[cite: 2149].", "¡Correcto! Dibujo y pintura herramientas representación y exploración[cite: 2150]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 2151]."
+        },
+        {
+            q: "¿Qué define la zona de desarrollo próximo?",
+            opts: ["A) Proceso biológico de crecimiento de masa ósea.", "B) Capacidad de resolver problemas bajo guía experta.", "C) Nivel de maduración motriz alcanzado de forma.", "D) Repetición mecánica de conductas sin ninguna intención."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2158].", "¡Correcto! Espacio de aprendizaje mediado por un tutor [cite: 2157].", "Incorrecto [cite: 2158].", "Incorrecto[cite: 2158]."],
+            sug: "Libro: Introducción a la psicología de Zepeda Herrera[cite: 2159]."
+        },
+        {
+            q: "La higiene del sueño infantil busca evitar:",
+            opts: ["A) Inhibición de melatonina por luz de pantallas.", "B) El descanso profundo durante toda la noche.", "C) La regularidad en los horarios de acostarse.", "D) Un ambiente oscuro y con silencio absoluto."],
+            ans: 0,
+            fbs: ["¡Correcto! Luz azul altera ritmo circadiano y calidad [cite: 2165].", "Incorrecto [cite: 2166].", "Incorrecto [cite: 2166].", "Incorrecto[cite: 2166]."],
+            sug: "Libro: Puericultura del niño en edad preescolar de Bastidas[cite: 2167]."
+        },
+        {
+            q: "¿Qué caracteriza al equilibrio estático en psicomotricidad?",
+            opts: ["A) Mantener postura estable durante la carrera veloz.", "B) Coordinación de movimientos de dedos para escribir.", "C) Control postural sin desplazamiento del centro gravedad.", "D) Reacción muscular rápida ante un sonido fuerte."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2174].", "Incorrecto[cite: 2174].", "¡Correcto! Mantener estabilidad sobre base fija sin traslado [cite: 2173].", "Incorrecto[cite: 2174]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 2175]."
+        },
+        {
+            q: "El género dramático mediante sombras chinas permite:",
+            opts: ["A) Análisis de la gramática en oraciones complejas.", "B) Memorización de fórmulas químicas de alta densidad.", "C) Mejora de la visión en espacios abiertos.", "D) Representación de historias mediante siluetas y luz."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 2182].", "Incorrecto [cite: 2182].", "Incorrecto[cite: 2182].", "¡Correcto! Técnica expresiva fomenta creatividad y proyección simbólica[cite: 2181]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2183]."
+        },
+        {
+            q: "La ley proximodistal del desarrollo motor establece:",
+            opts: ["A) Maduración desde eje central hacia las extremidades.", "B) Control muscular desde cabeza hacia los pies.", "C) Crecimiento óseo dependiente de la genética pura.", "D) Evolución de procesos cognitivos antes que motores."],
+            ans: 0,
+            fbs: ["¡Correcto! Control músculos tronco precede a manos pies [cite: 2189].", "Incorrecto [cite: 2190].", "Incorrecto [cite: 2191].", "Incorrecto[cite: 2191]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 2192]."
+        },
+        {
+            q: "La etapa presquemática del dibujo infantil implica:",
+            opts: ["A) Trazos impulsivos sin control visual del movimiento.", "B) Primera intención consciente de crear formas reales.", "C) Aplicación de leyes de perspectiva en paisajes.", "D) Copia exacta de letras del alfabeto español."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2199].", "¡Correcto! Niño establece relaciones entre dibujo y mundo [cite: 2198].", "Incorrecto [cite: 2199].", "Incorrecto[cite: 2199]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 2200]."
+        },
+        {
+            q: "Ante una obstrucción total de vía aérea:",
+            opts: ["A) Aplicar la maniobra de Heimlich de forma.", "B) Dar golpes suaves en la espalda alta.", "C) Ofrecer un vaso de agua muy fría.", "D) Introducir los dedos en la garganta profunda."],
+            ans: 0,
+            fbs: ["¡Correcto! Técnica emergencia genera presión intratorácica expulsa objeto [cite: 2206].", "Incorrecto [cite: 2207].", "Incorrecto [cite: 2207].", "Incorrecto[cite: 2207]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 2208]."
+        },
+        {
+            q: "El estadio sensorio-motor de Piaget se basa:",
+            opts: ["A) En la resolución de problemas lógicos abstractos.", "B) En el uso de símbolos y lenguaje.", "C) En la interacción física y percepción sensorial.", "D) En la clasificación de objetos por categorías."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2215].", "Incorrecto[cite: 2215].", "¡Correcto! Niño conoce mundo mediante sentidos acciones motoras [cite: 2214].", "Incorrecto[cite: 2215]."],
+            sug: "Libro: Desarrollo humano de Kail y Cavanaugh[cite: 2216]."
+        },
+        {
+            q: "La fibra en la nutrición infantil permite:",
+            opts: ["A) Aumento de caries dentales por azúcar natural.", "B) Regular el tránsito intestinal y evitar estreñimiento.", "C) Crecimiento rápido de los huesos del brazo.", "D) Mejora de la visión en la oscuridad."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2223].", "¡Correcto! Consumo frutas verduras garantiza función digestiva saludable [cite: 2222].", "Incorrecto [cite: 2223].", "Incorrecto[cite: 2223]."],
+            sug: "Guía: Alimentación para escolares de la OMS[cite: 2224]."
+        },
+        {
+            q: "¿Qué define al género lírico infantil técnicamente?",
+            opts: ["A) Relato de hechos históricos de forma secuencial.", "B) Representación dramática mediante el uso de mímica.", "C) Manual técnico sobre el uso de computadoras.", "D) Prioridad del ritmo y musicalidad del lenguaje."],
+            ans: 3,
+            fbs: ["Incorrecto [cite: 2231].", "Incorrecto [cite: 2231].", "Incorrecto[cite: 2231].", "¡Correcto! Poemas rimas buscan belleza sonora expresión emocional[cite: 2230]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 2232]."
+        },
+        {
+            q: "La lateralidad cruzada en el niño ocurre:",
+            opts: ["A) Cuando usa ambos lados del cuerpo igual.", "B) Al preferir ojo y mano lados opuestos.", "C) Por falta de ejercicio físico en recreo.", "D) Al sentarse mal en la silla madera."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2239].", "¡Correcto! Predominancia funcional ojo no coincide mano pie [cite: 2238].", "Incorrecto [cite: 2239].", "Incorrecto[cite: 2239]."],
+            sug: "Libro: La psicomotricidad en preescolar de Comellas Carbo[cite: 2240]."
+        },
+        {
+            q: "El dominio del espacio social implica interactuar:",
+            opts: ["A) Con otros niños dentro del área compartida.", "B) Únicamente con el propio cuerpo en eje.", "C) Con objetos inanimados de forma muy aislada.", "D) Corriendo solos por todo el patio escolar."],
+            ans: 0,
+            fbs: ["¡Correcto! Requiere integración conciencia espacial propia con demás [cite: 2246].", "Incorrecto [cite: 2247].", "Incorrecto [cite: 2247].", "Incorrecto[cite: 2247]."],
+            sug: "Website: Desarrollo Social e Infantil en Educación Inicial[cite: 2248]."
+        },
+        {
+            q: "El dibujo del 'renacuajo' es característico de:",
+            opts: ["A) La etapa del garabateo desordenado sin control.", "B) El inicio de la etapa presquemática infantil.", "C) La perfección técnica del realismo visual avanzado.", "D) El conocimiento profundo de la anatomía humana."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2255].", "¡Correcto! Primera representación figura humana círculo con líneas [cite: 2254].", "Incorrecto [cite: 2255].", "Incorrecto[cite: 2255]."],
+            sug: "Libro: Desarrollo de la capacidad creadora de Lowenfeld[cite: 2256]."
+        },
+        {
+            q: "Ante una hemorragia severa, la prioridad es:",
+            opts: ["A) Aplicar un torniquete en el cuello herido.", "B) Lavar la herida con mucha agua caliente.", "C) Realizar presión directa con apósitos muy limpios.", "D) Dar masajes circulares sobre la zona lesionada."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2263].", "Incorrecto[cite: 2264].", "¡Correcto! Maniobra más segura eficaz para detener sangrado [cite: 2262].", "Incorrecto[cite: 2264]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 2265]."
+        },
+        {
+            q: "La inteligencia musical de Gardner permite al:",
+            opts: ["A) Niño resolver acertijos de lógica muy difícil.", "B) Infante percibir, transformar y expresar formas sonoras.", "C) Alumno correr velozmente en espacios muy abiertos.", "D) Estudiante comprender sentimientos de otras personas ajenas."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2272].", "¡Correcto! Incluye sensibilidad al ritmo tono timbre música [cite: 2271].", "Incorrecto [cite: 2272].", "Incorrecto[cite: 2272]."],
+            sug: "Libro: Estructuras de la mente de Howard Gardner[cite: 2273]."
+        },
+        {
+            q: "La disciplina autoritaria se diferencia de positiva:",
+            opts: ["A) Por basarse en el miedo y castigo.", "B) Por fomentar la autonomía y respeto mutuo.", "C) Por carecer de reglas en el hogar.", "D) Por premiar siempre las buenas acciones realizadas."],
+            ans: 0,
+            fbs: ["¡Correcto! Busca obediencia externa sin considerar desarrollo emocional [cite: 2279].", "Incorrecto [cite: 2280].", "Incorrecto [cite: 2280].", "Incorrecto[cite: 2280]."],
+            sug: "Libro: Puericultura: el arte de la crianza de Gómez[cite: 2281]."
+        },
+        {
+            q: "Los mitos literarios infantiles tienen como fin:",
+            opts: ["A) Enseñar las tablas de multiplicar muy rápido.", "B) Explicar el origen del mundo mediante símbolos.", "C) Reparar juguetes rotos usando herramientas muy fuertes.", "D) Narrar noticias reales sobre la política nacional."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2288].", "¡Correcto! Proporcionan respuestas fantásticas a preguntas trascendentales niño [cite: 2287].", "Incorrecto [cite: 2288].", "Incorrecto[cite: 2288]."],
+            sug: "Libro: Literatura infantil y lenguaje de Sánchez Corral[cite: 2289]."
+        },
+        {
+            q: "Una actividad de motricidad gruesa implica la:",
+            opts: ["A) Carrera veloz esquivando obstáculos en el patio.", "B) Escritura de letras pequeñas en el cuaderno.", "C) Pintura de detalles en un dibujo pequeño.", "D) Manipulación de cuentas muy finas con dedos."],
+            ans: 0,
+            fbs: ["¡Correcto! Requiere coordinación dinámica todo cuerpo grandes músculos [cite: 2295].", "Incorrecto [cite: 2296].", "Incorrecto [cite: 2296].", "Incorrecto[cite: 2296]."],
+            sug: "Libro: Manual de aprendizaje motor de Granda[cite: 2297]."
+        },
+        {
+            q: "El esquema corporal y la propiocepción permiten:",
+            opts: ["A) Saber el precio de las frutas hoy.", "B) Conocer la posición de partes del cuerpo.", "C) Recordar fechas de cumpleaños de todos amigos.", "D) Correr cien metros en menos de segundos."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2304].", "¡Correcto! Información sensorial permite saber posición sin mirar [cite: 2303].", "Incorrecto [cite: 2304].", "Incorrecto[cite: 2304]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 2305]."
+        },
+        {
+            q: "El pensamiento divergente en cultura estética es:",
+            opts: ["A) Copiar exactamente lo que hace el maestro.", "B) Generar múltiples soluciones originales ante un reto.", "C) Mantener las manos limpias sin usar pintura.", "D) Memorizar nombres de pintores famosos del pasado."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2312].", "¡Correcto! Base creatividad infantil permite ir más allá convencional [cite: 2311].", "Incorrecto [cite: 2312].", "Incorrecto[cite: 2312]."],
+            sug: "Libro: La enseñanza de la creatividad de N. Burgos[cite: 2313]."
+        },
+        {
+            q: "¿Qué define técnicamente el pensamiento egocéntrico infantil?",
+            opts: ["A) Preferencia por el uso del lado derecho.", "B) Incapacidad para diferenciar perspectivas ajenas de propia.", "C) Representación mental de objetos en su ausencia.", "D) Coordinación de grandes grupos musculares del cuerpo."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2320].", "¡Correcto! Niño asume que demás perciben mundo igual [cite: 2319].", "Incorrecto [cite: 2320].", "Incorrecto[cite: 2320]."],
+            sug: "Libro: Desarrollo humano de Kail y Cavanaugh[cite: 2321]."
+        },
+        {
+            q: "La meta de felicidad en puericultura requiere:",
+            opts: ["A) Vínculos afectivos seguros y un ambiente estable.", "B) Estricta disciplina basada en el castigo físico.", "C) Ausencia total de reglas en el hogar.", "D) Consumo ilimitado de dulces y mucha televisión."],
+            ans: 0,
+            fbs: ["¡Correcto! Seguridad emocional cimiento bienestar desarrollo equilibrado [cite: 2327].", "Incorrecto [cite: 2328].", "Incorrecto [cite: 2328].", "Incorrecto[cite: 2328]."],
+            sug: "Libro: Puericultura: el arte de la crianza de Gómez[cite: 2329]."
+        },
+        {
+            q: "El género lírico infantil utiliza rimas para:",
+            opts: ["A) Enseñar conceptos de química muy avanzada ahora.", "B) Facilitar la memorización rítmica del lenguaje oral.", "C) Describir batallas históricas con muchos datos reales.", "D) Reparar juguetes rotos usando pegamento muy fuerte."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2336].", "¡Correcto! Ritmo rima potencian fluidez verbal memoria auditiva [cite: 2335].", "Incorrecto [cite: 2336].", "Incorrecto[cite: 2336]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2337]."
+        },
+        {
+            q: "¿Qué integra el esquema corporal en psicomotricidad?",
+            opts: ["A) Imagen mental global del propio cuerpo físico.", "B) Cálculo mental de operaciones aritméticas muy simples.", "C) Lectura fluida de textos narrativos muy cortos.", "D) Memorización rítmica de canciones infantiles muy populares."],
+            ans: 0,
+            fbs: ["¡Correcto! Representación intuitiva niño posee figura posibilidades motrices [cite: 2343].", "Incorrecto [cite: 2344].", "Incorrecto [cite: 2344].", "Incorrecto[cite: 2344]."],
+            sug: "Libro: La psicomotricidad en el jardín de Esparza[cite: 2345]."
+        },
+        {
+            q: "El dominio del espacio parcial consiste en:",
+            opts: ["A) Trasladarse por toda el área del patio.", "B) Correr velozmente hacia una meta muy lejana.", "C) Movimientos realizados desde un punto fijo central.", "D) Saltar cuerdas largas con muchos otros niños."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2352].", "Incorrecto[cite: 2352].", "¡Correcto! Kinesfera volumen espacial alcanzado sin desplazamiento centro [cite: 2351].", "Incorrecto[cite: 2352]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 2353]."
+        },
+        {
+            q: "El pensamiento divergente en cultura estética busca:",
+            opts: ["A) Copiar exactamente lo que hace el maestro.", "B) Generar múltiples soluciones originales ante un reto.", "C) Mantener las manos limpias sin usar pintura.", "D) Memorizar nombres de pintores famosos del pasado."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2360].", "¡Correcto! Núcleo creatividad permitiendo explorar diversas respuestas estéticas [cite: 2359].", "Incorrecto [cite: 2360].", "Incorrecto[cite: 2360]."],
+            sug: "Libro: La enseñanza de la creatividad de N. Burgos[cite: 2361]."
+        },
+        {
+            q: "Ante una quemadura térmica, el docente debe:",
+            opts: ["A) Aplicar crema dental sobre la zona afectada.", "B) Cubrir la lesión con algodón muy seco.", "C) Enfriar la herida con agua corriente fresca.", "D) Realizar masajes circulares sobre la piel dañada."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2368].", "Incorrecto[cite: 2368].", "¡Correcto! Enfriamiento inmediato detiene daño térmico tejidos profundos [cite: 2367].", "Incorrecto[cite: 2368]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 2369]."
+        },
+        {
+            q: "Según Gardner, la inteligencia naturalista infantil implica:",
+            opts: ["A) Habilidad para componer piezas musicales muy complejas.", "B) Facultad para entender sentimientos de otras personas.", "C) Sensibilidad hacia los elementos del mundo vivo.", "D) Destreza para orientarse en grandes ciudades nuevas."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2376].", "Incorrecto[cite: 2376].", "¡Correcto! Identificar clasificar percibir relaciones entorno biológico natural [cite: 2375].", "Incorrecto[cite: 2376]."],
+            sug: "Libro: Introducción a la psicología de Zepeda Herrera[cite: 2377]."
+        },
+        {
+            q: "Un hábito de sueño saludable previene la:",
+            opts: ["A) Inhibición de melatonina por luz de pantallas.", "B) Regularidad en los horarios de acostarse siempre.", "C) Aparición de caries dentales en dientes leche.", "D) Coordinación motriz de grandes grupos musculares corporales."],
+            ans: 0,
+            fbs: ["¡Correcto! Luz azul pantallas altera ritmo circadiano calidad [cite: 2383].", "Incorrecto [cite: 2384].", "Incorrecto [cite: 2385].", "Incorrecto[cite: 2385]."],
+            sug: "Libro: Puericultura del niño en edad preescolar de Bastidas[cite: 2386]."
+        },
+        {
+            q: "El género dramático mediante títeres facilita técnicamente:",
+            opts: ["A) La lectura de poemas cortos de autores.", "B) La proyección de conflictos y emociones infantiles.", "C) La memorización de fórmulas matemáticas de alta.", "D) La carrera de obstáculos en el patio."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2393].", "¡Correcto! Uso marionetas permite infante expresar mundo indirecto [cite: 2392].", "Incorrecto [cite: 2393].", "Incorrecto[cite: 2393]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2394]."
+        },
+        {
+            q: "La lateralidad cruzada en el niño ocurre:",
+            opts: ["A) Cuando usa ambos lados del cuerpo igual.", "B) Al preferir ojo y mano lados opuestos.", "C) Por falta de ejercicio físico en recreo.", "D) Al sentarse mal en la silla madera."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2401].", "¡Correcto! Predominancia órgano sensorial no coincide miembro motor [cite: 2400].", "Incorrecto [cite: 2401].", "Incorrecto[cite: 2401]."],
+            sug: "Libro: La psicomotricidad en preescolar de Comellas Carbo[cite: 2402]."
+        },
+        {
+            q: "¿Qué establece la ley proximodistal del desarrollo?",
+            opts: ["A) Maduración muscular desde la cabeza hacia pies.", "B) Control motor desde eje central hacia extremidades.", "C) Los movimientos finos aparecen antes que gruesos.", "D) El crecimiento óseo depende solo de genética."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2409].", "¡Correcto! Dominio muscular progresa desde tronco hacia extremidades [cite: 2408].", "Incorrecto [cite: 2409].", "Incorrecto[cite: 2409]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 2410]."
+        },
+        {
+            q: "La etapa presquemática del dibujo infantil implica:",
+            opts: ["A) Trazos impulsivos sin control visual del movimiento.", "B) Primera intención consciente de representar objetos reales.", "C) Aplicación de leyes de perspectiva en paisajes.", "D) Copia exacta de letras del alfabeto español."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2417].", "¡Correcto! Niño establece primeras relaciones dibujo y entorno [cite: 2416].", "Incorrecto [cite: 2417].", "Incorrecto[cite: 2417]."],
+            sug: "Guía: Guía de expresión plástica I de Malo[cite: 2418]."
+        },
+        {
+            q: "Ante una hemorragia severa, el docente debe:",
+            opts: ["A) Aplicar un torniquete en el cuello herido.", "B) Lavar la herida con mucha agua caliente.", "C) Realizar presión directa con apósitos muy limpios.", "D) Dar masajes circulares sobre la zona lesionada."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2425].", "Incorrecto[cite: 2425].", "¡Correcto! Maniobra segura eficaz para detener sangrado aula [cite: 2424].", "Incorrecto[cite: 2425]."],
+            sug: "Libro: Primeros auxilios en Educación Infantil de Carrera[cite: 2426]."
+        },
+        {
+            q: "La dislexia se define técnicamente como un:",
+            opts: ["A) Bajo cociente intelectual medido por test formales.", "B) Problema de visión corregido con lentes oscuros.", "C) Déficit en el procesamiento del lenguaje escrito.", "D) Retraso motor que impide caminar de forma."],
+            ans: 2,
+            fbs: ["Incorrecto [cite: 2433].", "Incorrecto[cite: 2433].", "¡Correcto! Dificultad específica aprendizaje base neurobiológica fonológica [cite: 2432].", "Incorrecto[cite: 2433]."],
+            sug: "Libro: Dificultades del aprendizaje de V. Fonseca[cite: 2434]."
+        },
+        {
+            q: "La meta de autonomía socio-afectiva busca la:",
+            opts: ["A) Dependencia absoluta de los padres para comer.", "B) Capacidad de resolver conflictos mediante el diálogo.", "C) Memorización de poemas largos con rima asonante.", "D) Conocimiento de capitales de todos los continentes."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2441].", "¡Correcto! Gestionar relaciones identidad forma independiente constructiva [cite: 2440].", "Incorrecto [cite: 2441].", "Incorrecto[cite: 2441]."],
+            sug: "Libro: Puericultura: el arte de la crianza de Gómez[cite: 2442]."
+        },
+        {
+            q: "¿Cuál es el propósito didáctico de refranes?",
+            opts: ["A) Enseñar reglas de ortografía sobre uso b.", "B) Transmitir sabiduría o consejos de forma práctica.", "C) Narrar noticias reales sobre la política nacional.", "D) Reparar juguetes rotos usando herramientas muy fuertes."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2449].", "¡Correcto! Sentencias breves encierran enseñanza moral social experiencia [cite: 2448].", "Incorrecto [cite: 2449].", "Incorrecto[cite: 2449]."],
+            sug: "Libro: La creación literaria para niños de Cervera[cite: 2450]."
+        },
+        {
+            q: "El ritmo en psicomotricidad se define como:",
+            opts: ["A) Fuerza ejercida por los músculos al saltar.", "B) Sucesión de movimientos con una cadencia determinada.", "C) Tamaño de los pies del niño pequeño.", "D) Color de la piel del infante sano."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2457].", "¡Correcto! Organización temporal acciones motrices manera armónica [cite: 2456].", "Incorrecto [cite: 2457].", "Incorrecto[cite: 2457]."],
+            sug: "Libro: El desarrollo psicomotor de J. Le Boulch[cite: 2458]."
+        },
+        {
+            q: "La técnica del modelado infantil potencia la:",
+            opts: ["A) Carrera de sacos en el patio grande.", "B) Percepción táctil y el volumen en tres.", "C) Memorización de colores primarios en orden alfabético.", "D) Lectura de textos científicos sobre el barro."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2465].", "¡Correcto! Contacto masas permite explorar formas tridimensionales [cite: 2464].", "Incorrecto [cite: 2465].", "Incorrecto[cite: 2465]."],
+            sug: "Libro: Las Artes Plásticas en la educación artística de Vanegas[cite: 2466]."
+        },
+        {
+            q: "El protocolo P.A.S. en primeros auxilios significa:",
+            opts: ["A) Pintar, Almorzar y Salir del aula pronto.", "B) Proteger, Alertar y Socorrer a la víctima.", "C) Pensar, Anotar y Seguir estudiando mucho ahora.", "D) Patear, Arrojar y Saltar sobre objetos rotos."],
+            ans: 1,
+            fbs: ["Incorrecto[cite: 2473].", "¡Correcto! Orden internacional actuación situación emergencia [cite: 2472].", "Incorrecto [cite: 2473].", "Incorrecto[cite: 2473]."],
+            sug: "Libro: Primeros auxilios en la Educación Infantil de Carrera[cite: 2474]."
+        }
+    ];
+
+    let corrects = 0;
+    let incorrects = 0;
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-content');
+        quizData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            const btns = item.opts.map((text, i) => 
+                `<button class="option-btn" onclick="evaluateAns(${index}, ${i}, this)">${text}</button>`
+            ).join('');
+
+            card.innerHTML = `
+                <span class="question-header">${index + 1}. ${item.q}</span>
+                <div class="options-container">${btns}</div>
+                <div id="fb-box-${index}" class="feedback"></div>
+                <div id="ref-${index}" class="ref-box"><strong>Sugerencia:</strong> ${item.sug}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    window.evaluateAns = function(qIdx, optIdx, btn) {
+        const data = quizData[qIdx];
+        const buttons = btn.parentElement.querySelectorAll('.option-btn');
+        const feedback = document.getElementById(`fb-box-${qIdx}`);
+        const ref = document.getElementById(`ref-${qIdx}`);
+
+        buttons.forEach(b => b.disabled = true);
+
+        if (optIdx === data.ans) {
+            btn.classList.add('correct');
+            feedback.className = 'feedback fb-success';
+            corrects++;
+            document.getElementById('correct-total').innerText = corrects;
+        } else {
+            btn.classList.add('incorrect');
+            buttons[data.ans].classList.add('correct');
+            feedback.className = 'feedback fb-error';
+            incorrects++;
+            document.getElementById('incorrect-total').innerText = incorrects;
+        }
+
+        feedback.innerHTML = data.fbs[optIdx];
+        feedback.style.display = 'block';
+        ref.style.display = 'block';
+    }
+
+    renderQuiz();
+</script>
+</body>
+</html>
